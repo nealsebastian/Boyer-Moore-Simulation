@@ -1,0 +1,1584 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Boyer–Moore String Matching Platform | DAA CIA-3</title>
+  <style>
+    :root {
+      --primary: #2563eb;
+      --primary-hover: #1d4ed8;
+      --primary-light: #eff6ff;
+      --primary-border: #bfdbfe;
+      --success: #16a34a;
+      --success-light: #f0fdf4;
+      --success-border: #bbf7d0;
+      --danger: #dc2626;
+      --danger-light: #fef2f2;
+      --danger-border: #fecaca;
+      --warning: #d97706;
+      --warning-light: #fffbeb;
+      --warning-border: #fde68a;
+      --slate-900: #0f172a;
+      --slate-800: #1e293b;
+      --slate-700: #334155;
+      --slate-600: #475569;
+      --slate-500: #64748b;
+      --slate-300: #cbd5e1;
+      --slate-200: #e2e8f0;
+      --slate-100: #f1f5f9;
+      --slate-50: #f8fafc;
+      --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+      --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+      --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+      --font: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+      --code-font: "Fira Code", "Courier New", Courier, monospace;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: var(--font);
+      background: #f8fafc;
+      color: var(--slate-800);
+      line-height: 1.6;
+    }
+
+    /* Top Navigation Bar */
+    nav.top-nav {
+      background: white;
+      border-bottom: 1px solid var(--slate-200);
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      box-shadow: var(--shadow-sm);
+    }
+
+    .nav-container {
+      max-width: 1400px;
+      margin: 0 auto;
+      padding: 0 24px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      height: 68px;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      text-decoration: none;
+      color: var(--slate-900);
+    }
+
+    .brand-logo {
+      background: linear-gradient(135deg, #1d4ed8, #2563eb);
+      color: white;
+      font-weight: 800;
+      font-size: 1.1rem;
+      width: 40px;
+      height: 40px;
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 4px 10px rgba(37, 99, 235, 0.3);
+    }
+
+    .brand-text h1 {
+      font-size: 1.1rem;
+      font-weight: 800;
+      letter-spacing: -0.3px;
+    }
+
+    .brand-text p {
+      font-size: 0.75rem;
+      color: var(--slate-500);
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .nav-tabs {
+      display: flex;
+      gap: 6px;
+      list-style: none;
+    }
+
+    .nav-tab-btn {
+      padding: 8px 16px;
+      border-radius: 8px;
+      border: none;
+      background: transparent;
+      color: var(--slate-600);
+      font-size: 0.9rem;
+      font-weight: 600;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      transition: all 0.2s;
+    }
+
+    .nav-tab-btn:hover {
+      background: var(--slate-100);
+      color: var(--slate-900);
+    }
+
+    .nav-tab-btn.active {
+      background: var(--primary-light);
+      color: var(--primary);
+      font-weight: 700;
+    }
+
+    /* Main Container */
+    main.main-content {
+      max-width: 1400px;
+      margin: 24px auto;
+      padding: 0 24px 60px;
+    }
+
+    /* Tab Panes */
+    .tab-pane {
+      display: none;
+    }
+
+    .tab-pane.active {
+      display: block;
+      animation: fadeIn 0.25s ease-in-out;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(4px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    /* Hero Banner */
+    .hero-banner {
+      background: linear-gradient(135deg, #1e3a8a 0%, #2563eb 100%);
+      color: white;
+      border-radius: 16px;
+      padding: 32px 36px;
+      margin-bottom: 24px;
+      box-shadow: var(--shadow-md);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 20px;
+    }
+
+    .hero-text h2 {
+      font-size: 1.8rem;
+      font-weight: 800;
+      margin-bottom: 6px;
+      letter-spacing: -0.5px;
+    }
+
+    .hero-text p {
+      font-size: 1rem;
+      color: #bfdbfe;
+      max-width: 750px;
+    }
+
+    .hero-badge {
+      background: rgba(255, 255, 255, 0.15);
+      border: 1px solid rgba(255, 255, 255, 0.3);
+      padding: 8px 18px;
+      border-radius: 9999px;
+      font-size: 0.85rem;
+      font-weight: 700;
+      letter-spacing: 0.5px;
+      backdrop-filter: blur(4px);
+    }
+
+    /* Cards */
+    .card {
+      background: white;
+      border-radius: 14px;
+      border: 1px solid var(--slate-200);
+      box-shadow: var(--shadow-sm);
+      padding: 24px;
+      margin-bottom: 24px;
+    }
+
+    .card-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 18px;
+      flex-wrap: wrap;
+      gap: 12px;
+    }
+
+    .card-title {
+      font-size: 1.15rem;
+      font-weight: 700;
+      color: var(--slate-900);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    /* Form & Controls */
+    .input-grid {
+      display: grid;
+      grid-template-columns: 2fr 1.2fr 1.2fr auto;
+      gap: 16px;
+      align-items: end;
+    }
+
+    @media (max-width: 992px) {
+      .input-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    .form-group {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .form-group label {
+      font-size: 0.85rem;
+      font-weight: 600;
+      color: var(--slate-700);
+    }
+
+    input[type="text"], input[type="number"], select {
+      padding: 10px 14px;
+      border-radius: 8px;
+      border: 1.5px solid var(--slate-200);
+      font-size: 0.95rem;
+      font-family: var(--code-font);
+      font-weight: 600;
+      outline: none;
+      transition: all 0.2s;
+    }
+
+    input[type="text"]:focus, select:focus {
+      border-color: var(--primary);
+      box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.15);
+    }
+
+    .btn {
+      padding: 10px 20px;
+      border-radius: 8px;
+      border: none;
+      font-weight: 600;
+      font-size: 0.9rem;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      transition: all 0.2s;
+    }
+
+    .btn-primary {
+      background: var(--primary);
+      color: white;
+    }
+
+    .btn-primary:hover:not(:disabled) {
+      background: var(--primary-hover);
+    }
+
+    .btn-secondary {
+      background: var(--slate-100);
+      color: var(--slate-700);
+      border: 1px solid var(--slate-200);
+    }
+
+    .btn-secondary:hover:not(:disabled) {
+      background: var(--slate-200);
+    }
+
+    .btn:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+
+    /* Metrics Bar */
+    .metrics-bar {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 16px;
+      margin-bottom: 24px;
+    }
+
+    .metric-card {
+      background: white;
+      border: 1px solid var(--slate-200);
+      border-radius: 12px;
+      padding: 18px;
+      text-align: center;
+      box-shadow: var(--shadow-sm);
+    }
+
+    .metric-title {
+      font-size: 0.8rem;
+      font-weight: 700;
+      color: var(--slate-500);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .metric-val {
+      font-size: 1.8rem;
+      font-weight: 800;
+      color: var(--slate-900);
+      margin-top: 4px;
+    }
+
+    .val-blue { color: var(--primary); }
+    .val-green { color: var(--success); }
+    .val-amber { color: var(--warning); }
+
+    /* Control Toolbar */
+    .controls-toolbar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 12px;
+      padding: 12px 18px;
+      background: var(--slate-50);
+      border-radius: 10px;
+      border: 1px solid var(--slate-200);
+      margin-bottom: 20px;
+    }
+
+    .step-btn-group {
+      display: flex;
+      gap: 8px;
+    }
+
+    .slider-group {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-size: 0.85rem;
+      color: var(--slate-600);
+      font-weight: 600;
+    }
+
+    /* Visualizer Scroll & Matrix */
+    .matrix-scroll-wrapper {
+      overflow-x: auto;
+      padding-bottom: 12px;
+      margin-bottom: 16px;
+    }
+
+    .matrix-content {
+      display: inline-block;
+      min-width: 100%;
+    }
+
+    .char-row {
+      display: flex;
+      align-items: center;
+      margin-bottom: 8px;
+    }
+
+    .row-tag {
+      width: 90px;
+      min-width: 90px;
+      font-weight: 700;
+      font-size: 0.85rem;
+      color: var(--slate-600);
+      text-transform: uppercase;
+    }
+
+    .char-tile {
+      width: 44px;
+      height: 44px;
+      min-width: 44px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      border-radius: 8px;
+      border: 1.5px solid var(--slate-200);
+      background: white;
+      margin-right: 6px;
+      font-family: var(--code-font);
+      font-weight: 700;
+      font-size: 1.15rem;
+      position: relative;
+      transition: all 0.2s ease;
+    }
+
+    .char-tile.empty {
+      border: 1.5px dashed #cbd5e1;
+      background: #f8fafc;
+      color: transparent;
+    }
+
+    .char-tile .tile-idx {
+      font-size: 0.65rem;
+      font-family: var(--font);
+      color: var(--slate-400);
+      position: absolute;
+      top: 2px;
+      font-weight: 600;
+    }
+
+    .char-tile .tile-char {
+      margin-top: 8px;
+    }
+
+    .char-tile.matched {
+      background: var(--success-light);
+      border-color: var(--success);
+      color: #15803d;
+      box-shadow: 0 0 10px rgba(22, 163, 74, 0.3);
+    }
+
+    .char-tile.mismatched {
+      background: var(--danger-light);
+      border-color: var(--danger);
+      color: #b91c1c;
+      box-shadow: 0 0 10px rgba(220, 38, 38, 0.3);
+    }
+
+    /* Decision Grid */
+    .decision-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 16px;
+    }
+
+    .info-card {
+      background: var(--slate-50);
+      border: 1px solid var(--slate-200);
+      border-radius: 10px;
+      padding: 16px;
+    }
+
+    .info-card-header {
+      font-size: 0.85rem;
+      font-weight: 700;
+      color: var(--slate-700);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      margin-bottom: 6px;
+    }
+
+    .formula-box {
+      background: white;
+      border: 1px solid var(--slate-200);
+      padding: 8px 12px;
+      border-radius: 6px;
+      font-family: var(--code-font);
+      font-size: 0.88rem;
+      color: var(--slate-800);
+      margin: 8px 0;
+    }
+
+    /* Tables */
+    .data-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.9rem;
+      text-align: left;
+    }
+
+    .data-table th, .data-table td {
+      border: 1px solid var(--slate-200);
+      padding: 10px 14px;
+    }
+
+    .data-table th {
+      background: var(--slate-100);
+      color: var(--slate-700);
+      font-weight: 700;
+    }
+
+    .data-table tr:hover {
+      background: var(--slate-50);
+    }
+
+    .badge-pill {
+      display: inline-block;
+      padding: 4px 10px;
+      border-radius: 9999px;
+      font-size: 0.78rem;
+      font-weight: 700;
+    }
+
+    .badge-success { background: var(--success-light); color: var(--success); border: 1px solid var(--success-border); }
+    .badge-danger { background: var(--danger-light); color: var(--danger); border: 1px solid var(--danger-border); }
+    .badge-primary { background: var(--primary-light); color: var(--primary); border: 1px solid var(--primary-border); }
+
+    /* Benchmark Images Grid */
+    .charts-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 24px;
+      margin-top: 18px;
+    }
+
+    @media (max-width: 900px) {
+      .charts-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    .chart-box {
+      background: white;
+      border: 1px solid var(--slate-200);
+      border-radius: 12px;
+      padding: 16px;
+      box-shadow: var(--shadow-sm);
+    }
+
+    .chart-box img {
+      width: 100%;
+      height: auto;
+      border-radius: 8px;
+      display: block;
+      border: 1px solid var(--slate-200);
+    }
+
+    .chart-caption {
+      font-size: 0.9rem;
+      color: var(--slate-700);
+      font-weight: 600;
+      margin-top: 10px;
+      text-align: center;
+    }
+
+    /* Print / PDF Styles */
+    @media print {
+      nav.top-nav, .hero-banner, .btn, .controls-toolbar, .nav-tabs {
+        display: none !important;
+      }
+      body {
+        background: white;
+        color: black;
+      }
+      .tab-pane {
+        display: block !important;
+      }
+      .card {
+        box-shadow: none;
+        border: 1px solid #ccc;
+        page-break-inside: avoid;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Top Navigation -->
+  <nav class="top-nav">
+    <div class="nav-container">
+      <div class="brand">
+        <div class="brand-logo">BM</div>
+        <div class="brand-text">
+          <h1>Boyer–Moore Platform</h1>
+          <p>DAA CIA–3 Component–1 | Unit–4</p>
+        </div>
+      </div>
+      <ul class="nav-tabs">
+        <li><button class="nav-tab-btn active" data-tab="tab-visualizer">🎮 Visualizer</button></li>
+        <li><button class="nav-tab-btn" data-tab="tab-benchmark">📊 Empirical Results</button></li>
+        <li><button class="nav-tab-btn" data-tab="tab-lab">🧪 Live Lab</button></li>
+        <li><button class="nav-tab-btn" data-tab="tab-theory">📖 Theory & Proofs</button></li>
+        <li><button class="nav-tab-btn" data-tab="tab-report">📄 Full Academic Report</button></li>
+      </ul>
+    </div>
+  </nav>
+
+  <main class="main-content">
+
+    <!-- Hero Banner -->
+    <div class="hero-banner">
+      <div class="hero-text">
+        <h2>Boyer–Moore String Matching Platform</h2>
+        <p>Design, Implementation, Simulation & Empirical Analysis of the sublinear Boyer–Moore Algorithm alongside Knuth-Morris-Pratt (KMP) and Naive Brute-Force.</p>
+      </div>
+      <div class="hero-badge">Unit–4 Exact String Matching</div>
+    </div>
+
+    <!-- ============================================================= -->
+    <!-- TAB 1: INTERACTIVE VISUALIZER -->
+    <!-- ============================================================= -->
+    <div class="tab-pane active" id="tab-visualizer">
+
+      <!-- Parameters Card -->
+      <div class="card">
+        <div class="card-header">
+          <div class="card-title"><span>⚙️</span> Simulation Setup</div>
+          <span style="font-size: 0.85rem; color: var(--slate-500); font-weight: 600;">Right-to-left character scanning with dual heuristic alignment</span>
+        </div>
+        <div class="input-grid">
+          <div class="form-group">
+            <label for="vizText">Target Text (T):</label>
+            <input type="text" id="vizText" value="GCAATGCAGAGAG" />
+          </div>
+          <div class="form-group">
+            <label for="vizPattern">Search Pattern (P):</label>
+            <input type="text" id="vizPattern" value="GCAGAGAG" />
+          </div>
+          <div class="form-group">
+            <label for="vizPreset">Curated Presets:</label>
+            <select id="vizPreset">
+              <option value="dna" selected>DNA Search (Textbook Classic)</option>
+              <option value="english">Natural English Search</option>
+              <option value="sublinear">Sublinear Best Case (O(n/m))</option>
+              <option value="overlap">Overlapping Substrings</option>
+              <option value="repetitive">Repetitive Worst-Case Setup</option>
+            </select>
+          </div>
+          <button class="btn btn-primary" id="btnVizApply">Apply & Reset</button>
+        </div>
+      </div>
+
+      <!-- Metrics Bar -->
+      <div class="metrics-bar">
+        <div class="metric-card">
+          <div class="metric-title">Current Step</div>
+          <div class="metric-val val-blue" id="vizMetricStep">0 / 0</div>
+        </div>
+        <div class="metric-card">
+          <div class="metric-title">Boyer–Moore Comparisons</div>
+          <div class="metric-val val-green" id="vizMetricBM">0</div>
+        </div>
+        <div class="metric-card">
+          <div class="metric-title">Naive Comparisons</div>
+          <div class="metric-val val-amber" id="vizMetricNaive">0</div>
+        </div>
+        <div class="metric-card">
+          <div class="metric-title">KMP Comparisons</div>
+          <div class="metric-val" id="vizMetricKMP">0</div>
+        </div>
+        <div class="metric-card">
+          <div class="metric-title">Work Reduction vs Naive</div>
+          <div class="metric-val val-green" id="vizMetricReduction">0%</div>
+        </div>
+      </div>
+
+      <!-- Alignment & Scan Card -->
+      <div class="card">
+        <div class="card-header">
+          <div class="card-title"><span>🔍</span> Pattern Alignment & Right-to-Left Scan</div>
+          <span id="vizStatusBadge" class="badge-pill badge-primary">Ready</span>
+        </div>
+
+        <!-- Toolbar -->
+        <div class="controls-toolbar">
+          <div class="step-btn-group">
+            <button class="btn btn-secondary" id="btnStepFirst">|&lt;</button>
+            <button class="btn btn-secondary" id="btnStepPrev">&lt; Prev</button>
+            <button class="btn btn-primary" id="btnPlayPause">▶ Play</button>
+            <button class="btn btn-secondary" id="btnStepNext">Next &gt;</button>
+            <button class="btn btn-secondary" id="btnStepLast">&gt;|</button>
+            <button class="btn btn-secondary" id="btnStepReset">↺ Reset</button>
+          </div>
+          <div class="slider-group">
+            <label for="speedRange">Speed:</label>
+            <input type="range" id="speedRange" min="300" max="2500" step="200" value="1200" />
+            <span id="speedDisplay">1.2s</span>
+          </div>
+        </div>
+
+        <!-- Matrix -->
+        <div class="matrix-scroll-wrapper">
+          <div class="matrix-content" id="matrixContainer"></div>
+        </div>
+
+        <!-- Legend -->
+        <div style="font-size: 0.85rem; color: var(--slate-600); display: flex; gap: 20px; flex-wrap: wrap;">
+          <div><span style="display:inline-block;width:12px;height:12px;background:var(--success-light);border:1px solid var(--success);border-radius:3px;margin-right:4px;"></span> Character Matched (P[j] == T[s+j])</div>
+          <div><span style="display:inline-block;width:12px;height:12px;background:var(--danger-light);border:1px solid var(--danger);border-radius:3px;margin-right:4px;"></span> Character Mismatch (P[j] != T[s+j])</div>
+          <div><span style="display:inline-block;width:12px;height:12px;border:1.5px dashed #cbd5e1;background:#f8fafc;border-radius:3px;margin-right:4px;"></span> Unaligned Window</div>
+        </div>
+      </div>
+
+      <!-- Heuristic Shift Decision Breakdown -->
+      <div class="card">
+        <div class="card-header">
+          <div class="card-title"><span>⚡</span> Step Decision & Heuristics Calculation</div>
+        </div>
+        <div class="decision-grid">
+          <div class="info-card">
+            <div class="info-card-header">1. Bad Character Heuristic</div>
+            <p style="font-size: 0.85rem; color: var(--slate-600);">Aligns mismatched text character with its rightmost occurrence in pattern.</p>
+            <div class="formula-box" id="cardBcFormula">Shift_BC = max(1, j - L(c))</div>
+            <div id="cardBcResult" style="font-weight: 700; color: var(--slate-800);">Shift Value: --</div>
+          </div>
+
+          <div class="info-card">
+            <div class="info-card-header">2. Good Suffix Heuristic</div>
+            <p style="font-size: 0.85rem; color: var(--slate-600);">Re-aligns matched suffix with another occurrence or longest matching prefix.</p>
+            <div class="formula-box" id="cardGsFormula">Shift_GS = Good_Suffix_Table[j + 1]</div>
+            <div id="cardGsResult" style="font-weight: 700; color: var(--slate-800);">Shift Value: --</div>
+          </div>
+
+          <div class="info-card" style="background: var(--primary-light); border-color: var(--primary-border);">
+            <div class="info-card-header" style="color: var(--primary-hover);">Maximum Shift Decision Rule</div>
+            <p style="font-size: 0.85rem; color: #1e3a8a;">Shift = max(Shift_BC, Shift_GS)</p>
+            <div class="formula-box" id="cardDecisionFormula" style="font-weight: 700; color: var(--primary-hover);">Applied Shift: --</div>
+            <div id="cardDecisionRule" style="font-weight: 700; color: var(--primary); margin-top: 4px;">Rule: --</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Tables and History Grid -->
+      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 24px;">
+        <!-- Preprocessing Tables -->
+        <div class="card">
+          <div class="card-header">
+            <div class="card-title"><span>📊</span> Preprocessed Tables</div>
+          </div>
+          <div style="margin-bottom: 16px;">
+            <h4 style="font-size: 0.85rem; color: var(--slate-700); margin-bottom: 6px;">Bad Character Table (Last Occurrence):</h4>
+            <div style="max-height: 120px; overflow-y: auto;">
+              <table class="data-table" id="tableBadChar">
+                <thead><tr><th>Character (c)</th><th>Last Index L(c)</th></tr></thead>
+                <tbody></tbody>
+              </table>
+            </div>
+          </div>
+          <div>
+            <h4 style="font-size: 0.85rem; color: var(--slate-700); margin-bottom: 6px;">Good Suffix Shift Table:</h4>
+            <div style="max-height: 140px; overflow-y: auto;">
+              <table class="data-table" id="tableGoodSuffix">
+                <thead><tr><th>Mismatch Position</th><th>Shift Amount</th></tr></thead>
+                <tbody></tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
+        <!-- Execution History -->
+        <div class="card">
+          <div class="card-header">
+            <div class="card-title"><span>📝</span> Step Execution History</div>
+          </div>
+          <div style="max-height: 280px; overflow-y: auto;">
+            <table class="data-table" id="tableHistory">
+              <thead><tr><th>Step</th><th>Shift (s)</th><th>Outcome</th><th>BC</th><th>GS</th><th>Applied</th></tr></thead>
+              <tbody></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- ============================================================= -->
+    <!-- TAB 2: EMPIRICAL BENCHMARK RESULTS -->
+    <!-- ============================================================= -->
+    <div class="tab-pane" id="tab-benchmark">
+      <div class="card">
+        <div class="card-header">
+          <div class="card-title"><span>📊</span> Empirical Benchmarking Analysis & Scientific Visualizations</div>
+          <button class="btn btn-secondary" onclick="window.print()">🖨️ Export / Print Charts</button>
+        </div>
+        <p style="color: var(--slate-600); margin-bottom: 16px;">
+          Empirical evaluation conducted using the benchmark suite across 4 major dimensions: Pattern Length ($m$), Text Length ($n$), Alphabet Size ($|\Sigma|$), and Complexity Scenarios. All trials executed on Python 3.12 with reproducible pseudo-random seeds.
+        </p>
+
+        <!-- Benchmark Charts Grid -->
+        <div class="charts-grid">
+          <div class="chart-box">
+            <img src="results/comparisons_vs_pattern_length.png" alt="Comparisons vs Pattern Length" />
+            <div class="chart-caption">Figure 1: Character Comparisons vs. Pattern Length (Demonstrates Sublinear O(n/m) Growth)</div>
+          </div>
+
+          <div class="chart-box">
+            <img src="results/runtime_vs_text_length.png" alt="Runtime vs Text Length" />
+            <div class="chart-caption">Figure 2: Execution Time (ms) vs. Text Length (n = 2,000 to 80,000)</div>
+          </div>
+
+          <div class="chart-box">
+            <img src="results/alphabet_size_impact.png" alt="Alphabet Size Impact" />
+            <div class="chart-caption">Figure 3: Impact of Alphabet Size on Comparisons (Binary, DNA, Decimal, English, ASCII)</div>
+          </div>
+
+          <div class="chart-box">
+            <img src="results/efficiency_summary.png" alt="Efficiency Summary across Cases" />
+            <div class="chart-caption">Figure 4: Total Comparisons Across Best, Average, and Worst Case Scenarios</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Tabular Data Summary -->
+      <div class="card">
+        <div class="card-header">
+          <div class="card-title"><span>📋</span> Empirical Benchmark Data Table</div>
+        </div>
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>Experiment</th>
+              <th>Variable Tested</th>
+              <th>Boyer–Moore</th>
+              <th>Knuth-Morris-Pratt (KMP)</th>
+              <th>Naive Brute-Force</th>
+              <th>BM Performance Advantage</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><strong>Pattern Length Scaling</strong></td>
+              <td>$m = 4$</td>
+              <td>2,200.7 comps</td>
+              <td>8,000.0 comps</td>
+              <td>8,327.7 comps</td>
+              <td><span class="badge-pill badge-success">73.6% reduction</span></td>
+            </tr>
+            <tr>
+              <td><strong>Pattern Length Scaling</strong></td>
+              <td>$m = 16$</td>
+              <td>698.6 comps</td>
+              <td>8,000.9 comps</td>
+              <td>8,318.6 comps</td>
+              <td><span class="badge-pill badge-success">91.6% reduction</span></td>
+            </tr>
+            <tr>
+              <td><strong>Pattern Length Scaling</strong></td>
+              <td>$m = 50$</td>
+              <td><strong>425.5 comps</strong></td>
+              <td>8,000.0 comps</td>
+              <td>8,313.0 comps</td>
+              <td><span class="badge-pill badge-success">94.9% reduction</span></td>
+            </tr>
+            <tr>
+              <td><strong>Text Scalability</strong></td>
+              <td>$n = 10,000$</td>
+              <td><strong>1.35 ms</strong></td>
+              <td>4.60 ms</td>
+              <td>6.29 ms</td>
+              <td><span class="badge-pill badge-success">3.41× faster</span></td>
+            </tr>
+            <tr>
+              <td><strong>Text Scalability</strong></td>
+              <td>$n = 80,000$</td>
+              <td><strong>11.94 ms</strong></td>
+              <td>41.67 ms</td>
+              <td>54.30 ms</td>
+              <td><span class="badge-pill badge-success">3.49× faster</span></td>
+            </tr>
+            <tr>
+              <td><strong>Alphabet Sensitivity</strong></td>
+              <td>Binary ($|\Sigma|=2$)</td>
+              <td>3,171.7 comps</td>
+              <td>5,379.3 comps</td>
+              <td>10,032.4 comps</td>
+              <td><span class="badge-pill badge-primary">Moderate speedup</span></td>
+            </tr>
+            <tr>
+              <td><strong>Alphabet Sensitivity</strong></td>
+              <td>ASCII ($|\Sigma|=62$)</td>
+              <td><strong>553.8 comps</strong></td>
+              <td>5,000.0 comps</td>
+              <td>5,077.4 comps</td>
+              <td><span class="badge-pill badge-success">5.7× fewer than Binary!</span></td>
+            </tr>
+            <tr>
+              <td><strong>Best-Case Scenario</strong></td>
+              <td>Disjoint Alphabet</td>
+              <td><strong>200 comps (0.10n)</strong></td>
+              <td>2,000 comps</td>
+              <td>1,991 comps</td>
+              <td><span class="badge-pill badge-success">Exact Sublinear O(n/m)</span></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- ============================================================= -->
+    <!-- TAB 3: LIVE BENCHMARK LAB -->
+    <!-- ============================================================= -->
+    <div class="tab-pane" id="tab-lab">
+      <div class="card">
+        <div class="card-header">
+          <div class="card-title"><span>🧪</span> Live Browser Benchmark Laboratory</div>
+        </div>
+        <p style="color: var(--slate-600); margin-bottom: 18px;">
+          Generate randomized test texts and patterns of custom sizes directly in your browser, run Boyer–Moore, KMP, and Naive concurrently, and inspect instant comparison statistics.
+        </p>
+
+        <div class="input-grid" style="grid-template-columns: 1fr 1fr 1fr auto;">
+          <div class="form-group">
+            <label for="labTextLen">Text Length (N):</label>
+            <input type="number" id="labTextLen" value="5000" min="500" max="50000" step="500" />
+          </div>
+          <div class="form-group">
+            <label for="labPattLen">Pattern Length (M):</label>
+            <input type="number" id="labPattLen" value="12" min="3" max="50" />
+          </div>
+          <div class="form-group">
+            <label for="labAlphabet">Alphabet Pool:</label>
+            <select id="labAlphabet">
+              <option value="binary">Binary (0, 1)</option>
+              <option value="dna">DNA (A, C, G, T)</option>
+              <option value="english" selected>English Alphabet (a-z)</option>
+              <option value="ascii">Full Alphanumeric</option>
+            </select>
+          </div>
+          <button class="btn btn-primary" id="btnRunLab">Run Live Benchmark</button>
+        </div>
+      </div>
+
+      <!-- Lab Results Card -->
+      <div class="card" id="labResultsCard" style="display: none;">
+        <div class="card-header">
+          <div class="card-title"><span>📈</span> Live Benchmark Outcome</div>
+        </div>
+
+        <div class="metrics-bar">
+          <div class="metric-card">
+            <div class="metric-title">Boyer–Moore Comparisons</div>
+            <div class="metric-val val-green" id="labBmComps">--</div>
+            <div style="font-size: 0.8rem; color: var(--slate-500); margin-top: 4px;" id="labBmRatio">--</div>
+          </div>
+          <div class="metric-card">
+            <div class="metric-title">KMP Comparisons</div>
+            <div class="metric-val" id="labKmpComps">--</div>
+            <div style="font-size: 0.8rem; color: var(--slate-500); margin-top: 4px;" id="labKmpRatio">--</div>
+          </div>
+          <div class="metric-card">
+            <div class="metric-title">Naive Comparisons</div>
+            <div class="metric-val val-amber" id="labNaiveComps">--</div>
+            <div style="font-size: 0.8rem; color: var(--slate-500); margin-top: 4px;" id="labNaiveRatio">--</div>
+          </div>
+          <div class="metric-card">
+            <div class="metric-title">BM Efficiency Saving</div>
+            <div class="metric-val val-green" id="labSavedPct">--</div>
+            <div style="font-size: 0.8rem; color: var(--slate-500); margin-top: 4px;">Fewer comparisons than Naive</div>
+          </div>
+        </div>
+
+        <div class="info-card" style="background: white; border-color: var(--slate-200); margin-top: 14px;">
+          <h4 style="font-size: 0.95rem; margin-bottom: 8px;">Algorithmic Behavior Summary:</h4>
+          <p id="labExplanation" style="color: var(--slate-700); font-size: 0.9rem;"></p>
+        </div>
+      </div>
+    </div>
+
+    <!-- ============================================================= -->
+    <!-- TAB 4: THEORETICAL FOUNDATIONS & PROOFS -->
+    <!-- ============================================================= -->
+    <div class="tab-pane" id="tab-theory">
+      <div class="card">
+        <div class="card-header">
+          <div class="card-title"><span>📖</span> Theoretical Framework (Unit–4 String Matching)</div>
+        </div>
+        <div style="display: flex; flex-direction: column; gap: 20px;">
+          <div>
+            <h3 style="color: var(--primary); margin-bottom: 8px;">1. The Sublinear Paradigm & Right-to-Left Scanning</h3>
+            <p>
+              In classical string matching, algorithms inspect pattern characters from left to right ($j = 0 \to m-1$). 
+              The <strong>Boyer–Moore algorithm</strong> fundamentally reverses this convention by comparing characters from <strong>right to left</strong> ($j = m-1 \to 0$), while shifting the pattern window from left to right across the text ($s \ge 0$).
+            </p>
+            <p style="margin-top: 6px;">
+              By failing early on the trailing characters of the pattern window, the algorithm gains maximum information about whether the pattern could possibly occur in the current window.
+            </p>
+          </div>
+
+          <div style="background: var(--slate-50); padding: 18px; border-radius: 10px; border: 1px solid var(--slate-200);">
+            <h3 style="color: var(--primary); margin-bottom: 8px;">2. The Bad Character Heuristic</h3>
+            <p>
+              Let $L(c)$ be the <strong>Last Occurrence Function</strong>, defined as the highest index in the pattern $P$ where character $c$ appears (or $-1$ if absent):
+            </p>
+            <div class="formula-box">
+              L(c) = max { k | P[k] == c } &nbsp; (or -1 if c ∉ P)
+            </div>
+            <p>
+              When a mismatch occurs at pattern index $j$ against text character $T[s + j]$:
+            </p>
+            <div class="formula-box">
+              Shift_BC = max(1, j - L(T[s + j]))
+            </div>
+            <p style="font-size: 0.88rem; color: var(--slate-600);">
+              If $T[s + j]$ does not appear in $P$ at all ($L(c) = -1$) and mismatch occurred at $j = m-1$, the pattern shifts by a full $m$ positions in a single step!
+            </p>
+          </div>
+
+          <div style="background: var(--slate-50); padding: 18px; border-radius: 10px; border: 1px solid var(--slate-200);">
+            <h3 style="color: var(--primary); margin-bottom: 8px;">3. The Strong Good Suffix Heuristic</h3>
+            <p>
+              When a mismatch occurs at $P[j]$, the suffix $t = P[j+1 \dots m-1]$ has already matched the text. The Good Suffix rule determines the shift via two conditions:
+            </p>
+            <ul style="margin-left: 24px; margin-top: 8px; font-size: 0.92rem;">
+              <li><strong>Case 1 (Strong Suffix Rule):</strong> If $t$ appears elsewhere in $P$ preceded by a character different from $P[j]$, shift $P$ to align that occurrence with $T$.</li>
+              <li><strong>Case 2 (Prefix Border Rule):</strong> If $t$ does not appear elsewhere, find the longest proper prefix of $P$ that matches a proper suffix of $t$, and shift to align them.</li>
+              <li><strong>Case 3:</strong> If neither condition holds, shift the pattern completely past the matched suffix by $m$.</li>
+            </ul>
+          </div>
+
+          <div>
+            <h3 style="color: var(--primary); margin-bottom: 8px;">4. Asymptotic Complexity Comparison Matrix</h3>
+            <table class="data-table" style="margin-top: 10px;">
+              <thead>
+                <tr>
+                  <th>Algorithm</th>
+                  <th>Preprocessing Time</th>
+                  <th>Best-Case Matching</th>
+                  <th>Average-Case Matching</th>
+                  <th>Worst-Case Matching</th>
+                  <th>Space Complexity</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td><strong>Naive Matching</strong></td>
+                  <td>None (O(1))</td>
+                  <td>Ω(n)</td>
+                  <td>Θ(n)</td>
+                  <td>O((n - m + 1) · m)</td>
+                  <td>O(1)</td>
+                </tr>
+                <tr>
+                  <td><strong>Knuth-Morris-Pratt (KMP)</strong></td>
+                  <td>Θ(m)</td>
+                  <td>Ω(n)</td>
+                  <td>Θ(n)</td>
+                  <td>O(n + m)</td>
+                  <td>Θ(m)</td>
+                </tr>
+                <tr>
+                  <td><strong>Rabin-Karp</strong></td>
+                  <td>Θ(m)</td>
+                  <td>Ω(n)</td>
+                  <td>O(n + m)</td>
+                  <td>O(n · m)</td>
+                  <td>O(1)</td>
+                </tr>
+                <tr style="background: #eff6ff; font-weight: 700;">
+                  <td><strong>Boyer–Moore (BM)</strong></td>
+                  <td>Θ(m + |Σ|)</td>
+                  <td>Ω(n / m) (Sublinear)</td>
+                  <td>O(n / m) to O(n)</td>
+                  <td>O(n · m) or O(n + m)*</td>
+                  <td>Θ(m + |Σ|)</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ============================================================= -->
+    <!-- TAB 5: COMPLETE ACADEMIC REPORT -->
+    <!-- ============================================================= -->
+    <div class="tab-pane" id="tab-report">
+      <div class="card">
+        <div class="card-header">
+          <div class="card-title"><span>📄</span> CIA–3 Component–1 Academic Report</div>
+          <button class="btn btn-primary" onclick="window.print()">🖨️ Print / Save as PDF</button>
+        </div>
+
+        <div style="border-top: 1px solid var(--slate-200); padding-top: 20px; font-size: 0.95rem; line-height: 1.8; color: var(--slate-800);">
+          <div style="text-align: center; margin-bottom: 30px;">
+            <h2 style="font-size: 1.5rem; color: var(--slate-900);">Continuous Internal Assessment (CIA) – 3: Component – 1</h2>
+            <h3 style="font-size: 1.2rem; color: var(--primary); margin-top: 6px;">Design, Simulation, and Empirical Analysis of the Boyer–Moore String Matching Algorithm</h3>
+            <p style="color: var(--slate-500); font-weight: 600; margin-top: 6px;">Course: Design and Analysis of Algorithms (DAA) | Unit–4 String Matching</p>
+          </div>
+
+          <h3 style="color: var(--slate-900); border-bottom: 2px solid var(--slate-200); padding-bottom: 4px; margin: 24px 0 10px;">1. Introduction & Theoretical Context</h3>
+          <p>
+            Exact string matching represents one of the core problems in computational algorithms. Given a text string $T$ of length $n$ and a pattern $P$ of length $m$ ($m \le n$), the objective is to determine all alignment offsets $s$ where $P$ appears verbatim in $T$. While brute-force matching inspects every alignment requiring $O(n \cdot m)$ worst-case time, and Knuth-Morris-Pratt achieves linear $\Theta(n)$ time by eliminating text backtracking, the <strong>Boyer–Moore algorithm</strong> is renowned for its <strong>sublinear average-case runtime</strong> ($\approx O(n/m)$).
+          </p>
+
+          <h3 style="color: var(--slate-900); border-bottom: 2px solid var(--slate-200); padding-bottom: 4px; margin: 24px 0 10px;">2. The Dual Heuristic Principle</h3>
+          <p>
+            Boyer–Moore achieves its extraordinary skipping power by scanning characters from right to left ($j = m-1 \dots 0$) and computing two shift recommendations upon mismatch:
+          </p>
+          <ul style="margin-left: 24px; margin-top: 8px;">
+            <li><strong>Bad Character Rule ($\Delta_{BC}$):</strong> Uses the Last Occurrence Table $L(c)$ to shift the pattern so that the mismatched text character aligns with its rightmost appearance in $P$: $\Delta_{BC} = \max(1, j - L(T[s + j]))$.</li>
+            <li><strong>Good Suffix Rule ($\Delta_{GS}$):</strong> Uses the matched suffix $P[j+1 \dots m-1]$ to find either an internal identical copy preceded by a distinct character (Strong Suffix) or the longest prefix matching a suffix of the matched portion (Prefix Border).</li>
+          </ul>
+          <p style="margin-top: 8px;">
+            The final shift applied is strictly the maximum: $s_{next} = s + \max(\Delta_{BC}, \Delta_{GS})$, guaranteeing both safety (no missed matches) and maximal progress.
+          </p>
+
+          <h3 style="color: var(--slate-900); border-bottom: 2px solid var(--slate-200); padding-bottom: 4px; margin: 24px 0 10px;">3. Experimental Validation & Results</h3>
+          <p>
+            Through rigorous empirical trials on randomized and benchmark datasets, the following observations were proven:
+          </p>
+          <ol style="margin-left: 24px; margin-top: 8px;">
+            <li><strong>Sublinear Pattern Scaling:</strong> As $m$ grew from 4 to 50, Boyer–Moore comparisons dropped from 2,200.7 down to 425.5 (~95% fewer checks than Naive and KMP).</li>
+            <li><strong>Alphabet Size Impact:</strong> On large alphabets such as English ($|\Sigma|=26$) and ASCII ($|\Sigma|=62$), Bad Character shifts achieved full length $m$, requiring only 553 comparisons compared to 5,000 for KMP.</li>
+            <li><strong>Wall-Clock Execution:</strong> Across texts from 2,000 to 80,000 characters, Boyer–Moore maintained a sustained 3.1× to 3.7× speed advantage over KMP.</li>
+          </ol>
+
+          <h3 style="color: var(--slate-900); border-bottom: 2px solid var(--slate-200); padding-bottom: 4px; margin: 24px 0 10px;">4. Industrial Applications</h3>
+          <p>
+            Because of its sublinear character skipping, Boyer–Moore and its variants (such as Boyer-Moore-Horspool and Commentz-Walter) serve as the default search engine in GNU <code>grep</code>, biological sequence alignment tools (BLAST), and packet payload filtering engines in Network Intrusion Detection Systems (Snort, Suricata).
+          </p>
+        </div>
+      </div>
+    </div>
+
+  </main>
+
+  <!-- Visualizer & Lab JavaScript Controller -->
+  <script>
+    // Tab Switching Logic
+    document.querySelectorAll(".nav-tab-btn").forEach(btn => {
+      btn.addEventListener("click", () => {
+        document.querySelectorAll(".nav-tab-btn").forEach(b => b.classList.remove("active"));
+        document.querySelectorAll(".tab-pane").forEach(p => p.classList.remove("active"));
+
+        btn.classList.add("active");
+        const tabId = btn.getAttribute("data-tab");
+        document.getElementById(tabId).classList.add("active");
+      });
+    });
+
+    // =========================================================
+    // Core Boyer–Moore Implementation
+    // =========================================================
+    function buildBadCharTable(pattern) {
+      const table = {};
+      for (let i = 0; i < pattern.length; i++) {
+        table[pattern[i]] = i;
+      }
+      return table;
+    }
+
+    function buildGoodSuffixTable(pattern) {
+      const m = pattern.length;
+      const shift = new Array(m + 1).fill(0);
+      const bpos = new Array(m + 1).fill(0);
+
+      let i = m;
+      let j = m + 1;
+      bpos[i] = j;
+
+      while (i > 0) {
+        while (j <= m && pattern[i - 1] !== pattern[j - 1]) {
+          if (shift[j] === 0) shift[j] = j - i;
+          j = bpos[j];
+        }
+        i--; j--;
+        bpos[i] = j;
+      }
+
+      j = bpos[0];
+      for (let k = 0; k <= m; k++) {
+        if (shift[k] === 0) shift[k] = j;
+        if (k === j) j = bpos[j];
+      }
+      return shift;
+    }
+
+    function traceBoyerMoore(text, pattern) {
+      const n = text.length;
+      const m = pattern.length;
+      const bcTable = buildBadCharTable(pattern);
+      const gsTable = buildGoodSuffixTable(pattern);
+
+      const steps = [];
+      const matches = [];
+      let comparisons = 0;
+      let shifts = 0;
+      let s = 0;
+      let stepNum = 1;
+
+      while (s <= n - m) {
+        let j = m - 1;
+        const matched = [];
+        let mismatch = null;
+
+        while (j >= 0) {
+          comparisons++;
+          const tIdx = s + j;
+          if (pattern[j] === text[tIdx]) {
+            matched.push({ pIdx: j, tIdx: tIdx, char: pattern[j] });
+            j--;
+          } else {
+            mismatch = { pIdx: j, tIdx: tIdx, pChar: pattern[j], tChar: text[tIdx] };
+            break;
+          }
+        }
+
+        const isMatch = (j < 0);
+        let bcShift = 1, gsShift = 1, chosenShift = 1, ruleUsed = "";
+
+        if (isMatch) {
+          matches.push(s);
+          gsShift = gsTable[0] > 0 ? gsTable[0] : 1;
+          chosenShift = gsShift;
+          ruleUsed = "Good Suffix Rule (Match Shift)";
+        } else {
+          const lastOcc = bcTable[mismatch.tChar] !== undefined ? bcTable[mismatch.tChar] : -1;
+          bcShift = Math.max(1, j - lastOcc);
+          gsShift = gsTable[j + 1];
+
+          if (bcShift >= gsShift) {
+            chosenShift = bcShift;
+            ruleUsed = "Bad Character Heuristic";
+          } else {
+            chosenShift = gsShift;
+            ruleUsed = "Good Suffix Heuristic";
+          }
+        }
+
+        steps.push({
+          stepNum,
+          shiftIndex: s,
+          matched,
+          mismatch,
+          isMatch,
+          bcShift,
+          gsShift,
+          chosenShift,
+          ruleUsed,
+          comparisonsSoFar: comparisons
+        });
+
+        s += chosenShift;
+        shifts++;
+        stepNum++;
+      }
+
+      return { text, pattern, matches, totalComparisons: comparisons, totalShifts: shifts, steps, bcTable, gsTable };
+    }
+
+    function calcNaiveComparisons(text, pattern) {
+      let comps = 0;
+      for (let s = 0; s <= text.length - pattern.length; s++) {
+        for (let j = 0; j < pattern.length; j++) {
+          comps++;
+          if (pattern[j] !== text[s + j]) break;
+        }
+      }
+      return comps;
+    }
+
+    function calcKMPComparisons(text, pattern) {
+      const m = pattern.length;
+      const n = text.length;
+      let comps = 0;
+      const lps = new Array(m).fill(0);
+      let len = 0, i = 1;
+      while (i < m) {
+        if (pattern[i] === pattern[len]) {
+          len++; lps[i] = len; i++;
+        } else {
+          if (len !== 0) len = lps[len - 1];
+          else { lps[i] = 0; i++; }
+        }
+      }
+
+      let ti = 0, pi = 0;
+      while (ti < n) {
+        comps++;
+        if (pattern[pi] === text[ti]) {
+          ti++; pi++;
+        }
+        if (pi === m) {
+          pi = lps[pi - 1];
+        } else if (ti < n && pattern[pi] !== text[ti]) {
+          if (pi !== 0) pi = lps[pi - 1];
+          else ti++;
+        }
+      }
+      return comps;
+    }
+
+    // =========================================================
+    // Visualizer Controller
+    // =========================================================
+    let vizData = null;
+    let vizStepIdx = 0;
+    let vizInterval = null;
+
+    const presets = {
+      dna: { text: "GCAATGCAGAGAG", pattern: "GCAGAGAG" },
+      english: { text: "HERE IS A SIMPLE EXAMPLE", pattern: "EXAMPLE" },
+      sublinear: { text: "ABCDEFGHIJKLMNO", pattern: "XYZW" },
+      overlap: { text: "ABRACADABRA", pattern: "ABRA" },
+      repetitive: { text: "AAAAAAAAAAAAAAAAAAAA", pattern: "AAAA" }
+    };
+
+    function initVisualizer() {
+      const text = document.getElementById("vizText").value.trim();
+      const pattern = document.getElementById("vizPattern").value.trim();
+
+      if (!text || !pattern || pattern.length > text.length) {
+        alert("Please enter a valid text and pattern (pattern length <= text length).");
+        return;
+      }
+
+      vizData = traceBoyerMoore(text, pattern);
+      const naiveC = calcNaiveComparisons(text, pattern);
+      const kmpC = calcKMPComparisons(text, pattern);
+
+      document.getElementById("vizMetricNaive").textContent = naiveC;
+      document.getElementById("vizMetricKMP").textContent = kmpC;
+      const saved = naiveC > 0 ? (((naiveC - vizData.totalComparisons) / naiveC) * 100).toFixed(1) + "%" : "0%";
+      document.getElementById("vizMetricReduction").textContent = saved;
+
+      renderTables();
+      renderHistory();
+
+      vizStepIdx = 0;
+      renderCurrentStep();
+      pauseAutoPlay();
+    }
+
+    function renderTables() {
+      // Bad char table
+      const bcBody = document.querySelector("#tableBadChar tbody");
+      bcBody.innerHTML = "";
+      for (const [char, idx] of Object.entries(vizData.bcTable)) {
+        const tr = document.createElement("tr");
+        tr.innerHTML = `<td><code>'${char}'</code></td><td><code>${idx}</code></td>`;
+        bcBody.appendChild(tr);
+      }
+
+      // Good suffix table
+      const gsBody = document.querySelector("#tableGoodSuffix tbody");
+      gsBody.innerHTML = "";
+      vizData.gsTable.forEach((val, idx) => {
+        const tr = document.createElement("tr");
+        const lbl = idx === 0 ? "Full Match (s)" : `Mismatch at j=${idx - 1}`;
+        tr.innerHTML = `<td>${lbl}</td><td><code>${val}</code></td>`;
+        gsBody.appendChild(tr);
+      });
+    }
+
+    function renderHistory() {
+      const histBody = document.querySelector("#tableHistory tbody");
+      histBody.innerHTML = "";
+      vizData.steps.forEach((step, idx) => {
+        const tr = document.createElement("tr");
+        tr.style.cursor = "pointer";
+        tr.onclick = () => { goToStep(idx); };
+        const status = step.isMatch ? "<span class='badge-pill badge-success'>MATCH</span>" : "<span class='badge-pill badge-danger'>MISMATCH</span>";
+        tr.innerHTML = `
+          <td>${step.stepNum}</td>
+          <td><code>${step.shiftIndex}</code></td>
+          <td>${status}</td>
+          <td><code>${step.bcShift}</code></td>
+          <td><code>${step.gsShift}</code></td>
+          <td><strong style="color:var(--primary);">${step.chosenShift}</strong></td>
+        `;
+        histBody.appendChild(tr);
+      });
+    }
+
+    function renderCurrentStep() {
+      if (!vizData || vizData.steps.length === 0) return;
+
+      const step = vizData.steps[vizStepIdx];
+      const text = vizData.text;
+      const pattern = vizData.pattern;
+      const n = text.length;
+      const m = pattern.length;
+      const s = step.shiftIndex;
+
+      // Metrics
+      document.getElementById("vizMetricStep").textContent = `${vizStepIdx + 1} / ${vizData.steps.length}`;
+      document.getElementById("vizMetricBM").textContent = step.comparisonsSoFar;
+
+      // Status
+      const badge = document.getElementById("vizStatusBadge");
+      if (step.isMatch) {
+        badge.textContent = `Match Found at index ${s}!`;
+        badge.className = "badge-pill badge-success";
+      } else {
+        badge.textContent = `Mismatch at Pattern index j=${step.mismatch.pIdx}`;
+        badge.className = "badge-pill badge-danger";
+      }
+
+      // Matrix
+      const container = document.getElementById("matrixContainer");
+      container.innerHTML = "";
+
+      // Text row
+      const tRow = document.createElement("div");
+      tRow.className = "char-row";
+      tRow.innerHTML = `<div class="row-tag">Text (T)</div>`;
+      for (let i = 0; i < n; i++) {
+        const tile = document.createElement("div");
+        tile.className = "char-tile";
+        if (step.matched.some(mc => mc.tIdx === i)) tile.classList.add("matched");
+        else if (step.mismatch && step.mismatch.tIdx === i) tile.classList.add("mismatched");
+
+        tile.innerHTML = `<span class="tile-idx">${i}</span><span class="tile-char">${text[i]}</span>`;
+        tRow.appendChild(tile);
+      }
+      container.appendChild(tRow);
+
+      // Pattern row
+      const pRow = document.createElement("div");
+      pRow.className = "char-row";
+      pRow.innerHTML = `<div class="row-tag">Pattern (P)</div>`;
+      for (let i = 0; i < n; i++) {
+        const tile = document.createElement("div");
+        if (i >= s && i < s + m) {
+          const pIdx = i - s;
+          tile.className = "char-tile";
+          if (step.matched.some(mc => mc.pIdx === pIdx)) tile.classList.add("matched");
+          else if (step.mismatch && step.mismatch.pIdx === pIdx) tile.classList.add("mismatched");
+
+          tile.innerHTML = `<span class="tile-idx">${pIdx}</span><span class="tile-char">${pattern[pIdx]}</span>`;
+        } else {
+          tile.className = "char-tile empty";
+        }
+        pRow.appendChild(tile);
+      }
+      container.appendChild(pRow);
+
+      // Decision Card
+      if (step.isMatch) {
+        document.getElementById("cardBcFormula").textContent = "Full pattern matched.";
+        document.getElementById("cardBcResult").textContent = "Shift_BC = 1";
+        document.getElementById("cardGsFormula").textContent = `Good Suffix Shift = table[0] = ${step.gsShift}`;
+        document.getElementById("cardGsResult").textContent = `Shift_GS = ${step.gsShift}`;
+        document.getElementById("cardDecisionFormula").textContent = `Shift = ${step.chosenShift}`;
+        document.getElementById("cardDecisionRule").textContent = `Rule: ${step.ruleUsed}`;
+      } else {
+        const mm = step.mismatch;
+        const lastOcc = vizData.bcTable[mm.tChar] !== undefined ? vizData.bcTable[mm.tChar] : -1;
+        document.getElementById("cardBcFormula").textContent = `Shift_BC = max(1, ${mm.pIdx} - L('${mm.tChar}')) = max(1, ${mm.pIdx} - (${lastOcc})) = ${step.bcShift}`;
+        document.getElementById("cardBcResult").textContent = `Shift_BC Value = ${step.bcShift}`;
+
+        document.getElementById("cardGsFormula").textContent = `Shift_GS = Good_Suffix_Table[${mm.pIdx + 1}] = ${step.gsShift}`;
+        document.getElementById("cardGsResult").textContent = `Shift_GS Value = ${step.gsShift}`;
+
+        document.getElementById("cardDecisionFormula").textContent = `Shift = max(${step.bcShift}, ${step.gsShift}) = ${step.chosenShift}`;
+        document.getElementById("cardDecisionRule").textContent = `Applied Rule: ${step.ruleUsed}`;
+      }
+
+      // Highlight row in history table
+      document.querySelectorAll("#tableHistory tbody tr").forEach((tr, idx) => {
+        tr.style.background = idx === vizStepIdx ? "var(--primary-light)" : "";
+      });
+
+      // Controls state
+      document.getElementById("btnStepFirst").disabled = (vizStepIdx === 0);
+      document.getElementById("btnStepPrev").disabled = (vizStepIdx === 0);
+      document.getElementById("btnStepNext").disabled = (vizStepIdx >= vizData.steps.length - 1);
+      document.getElementById("btnStepLast").disabled = (vizStepIdx >= vizData.steps.length - 1);
+    }
+
+    function goToStep(idx) {
+      if (idx >= 0 && idx < vizData.steps.length) {
+        vizStepIdx = idx;
+        renderCurrentStep();
+      }
+    }
+
+    function toggleAutoPlay() {
+      if (vizInterval) pauseAutoPlay();
+      else startAutoPlay();
+    }
+
+    function startAutoPlay() {
+      const speed = parseInt(document.getElementById("speedRange").value);
+      document.getElementById("btnPlayPause").textContent = "❚❚ Pause";
+      document.getElementById("btnPlayPause").classList.replace("btn-primary", "btn-secondary");
+
+      vizInterval = setInterval(() => {
+        if (vizStepIdx < vizData.steps.length - 1) {
+          vizStepIdx++;
+          renderCurrentStep();
+        } else {
+          pauseAutoPlay();
+        }
+      }, speed);
+    }
+
+    function pauseAutoPlay() {
+      if (vizInterval) {
+        clearInterval(vizInterval);
+        vizInterval = null;
+      }
+      document.getElementById("btnPlayPause").textContent = "▶ Play";
+      document.getElementById("btnPlayPause").classList.replace("btn-secondary", "btn-primary");
+    }
+
+    // Presets
+    document.getElementById("vizPreset").addEventListener("change", (e) => {
+      const p = presets[e.target.value];
+      if (p) {
+        document.getElementById("vizText").value = p.text;
+        document.getElementById("vizPattern").value = p.pattern;
+        initVisualizer();
+      }
+    });
+
+    document.getElementById("btnVizApply").addEventListener("click", initVisualizer);
+    document.getElementById("btnStepReset").addEventListener("click", initVisualizer);
+    document.getElementById("btnStepFirst").addEventListener("click", () => { pauseAutoPlay(); goToStep(0); });
+    document.getElementById("btnStepPrev").addEventListener("click", () => { pauseAutoPlay(); goToStep(vizStepIdx - 1); });
+    document.getElementById("btnStepNext").addEventListener("click", () => { pauseAutoPlay(); goToStep(vizStepIdx + 1); });
+    document.getElementById("btnStepLast").addEventListener("click", () => { pauseAutoPlay(); goToStep(vizData.steps.length - 1); });
+    document.getElementById("btnPlayPause").addEventListener("click", toggleAutoPlay);
+
+    document.getElementById("speedRange").addEventListener("input", (e) => {
+      document.getElementById("speedDisplay").textContent = `${(e.target.value / 1000).toFixed(1)}s`;
+      if (vizInterval) { pauseAutoPlay(); startAutoPlay(); }
+    });
+
+    // =========================================================
+    // Live Lab Controller
+    // =========================================================
+    document.getElementById("btnRunLab").addEventListener("click", () => {
+      const n = parseInt(document.getElementById("labTextLen").value);
+      const m = parseInt(document.getElementById("labPattLen").value);
+      const alphaChoice = document.getElementById("labAlphabet").value;
+
+      let alphabet = "abcdefghijklmnopqrstuvwxyz";
+      if (alphaChoice === "binary") alphabet = "01";
+      else if (alphaChoice === "dna") alphabet = "ACGT";
+      else if (alphaChoice === "ascii") alphabet = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
+
+      // Generate random string
+      let text = "";
+      for (let i = 0; i < n; i++) {
+        text += alphabet[Math.floor(Math.random() * alphabet.length)];
+      }
+
+      // Pick pattern from text or random
+      const start = Math.floor(Math.random() * (n - m));
+      const pattern = text.substring(start, start + m);
+
+      // Run matchers
+      const bmResult = traceBoyerMoore(text, pattern);
+      const naiveComps = calcNaiveComparisons(text, pattern);
+      const kmpComps = calcKMPComparisons(text, pattern);
+
+      document.getElementById("labResultsCard").style.display = "block";
+      document.getElementById("labBmComps").textContent = bmResult.totalComparisons.toLocaleString();
+      document.getElementById("labKmpComps").textContent = kmpComps.toLocaleString();
+      document.getElementById("labNaiveComps").textContent = naiveComps.toLocaleString();
+
+      document.getElementById("labBmRatio").textContent = `(${(bmResult.totalComparisons / n).toFixed(2)} × N comparisons)`;
+      document.getElementById("labKmpRatio").textContent = `(${(kmpComps / n).toFixed(2)} × N comparisons)`;
+      document.getElementById("labNaiveRatio").textContent = `(${(naiveComps / n).toFixed(2)} × N comparisons)`;
+
+      const saved = (((naiveComps - bmResult.totalComparisons) / naiveComps) * 100).toFixed(1) + "%";
+      document.getElementById("labSavedPct").textContent = saved;
+
+      const sublinearFactor = (n / bmResult.totalComparisons).toFixed(2);
+      document.getElementById("labExplanation").innerHTML = `
+        For text size <strong>N = ${n.toLocaleString()}</strong> and pattern size <strong>M = ${m}</strong> over alphabet <code>${alphaChoice}</code>, 
+        Boyer–Moore examined only <strong>${bmResult.totalComparisons.toLocaleString()}</strong> characters. 
+        On average, Boyer–Moore checked only <strong>1 character every ${sublinearFactor} characters of text</strong>, exhibiting true <strong>sublinear efficiency</strong>!
+      `;
+    });
+
+    // Initialize on page load
+    window.addEventListener("DOMContentLoaded", initVisualizer);
+  </script>
+</body>
+</html>

@@ -1,0 +1,1069 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Boyer-Moore String Matching Visualizer | DAA CIA-3</title>
+  <style>
+    :root {
+      --primary: #2563eb;
+      --primary-dark: #1d4ed8;
+      --primary-light: #dbeafe;
+      --success: #16a34a;
+      --success-light: #dcfce7;
+      --danger: #dc2626;
+      --danger-light: #fee2e2;
+      --warning: #d97706;
+      --warning-light: #fef3c7;
+      --slate-900: #0f172a;
+      --slate-800: #1e293b;
+      --slate-700: #334155;
+      --slate-600: #475569;
+      --slate-200: #e2e8f0;
+      --slate-100: #f1f5f9;
+      --slate-50: #f8fafc;
+      --card-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.08), 0 4px 6px -2px rgba(0, 0, 0, 0.04);
+      --font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: var(--font-family);
+      background: #f0f4f8;
+      color: var(--slate-800);
+      padding: 24px;
+      line-height: 1.5;
+    }
+
+    .container {
+      max-width: 1300px;
+      margin: 0 auto;
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+    }
+
+    /* Header */
+    header {
+      background: linear-gradient(135deg, #1e3a8a, #2563eb);
+      color: white;
+      padding: 24px 30px;
+      border-radius: 16px;
+      box-shadow: var(--card-shadow);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 16px;
+    }
+
+    header h1 {
+      font-size: 1.6rem;
+      font-weight: 700;
+      letter-spacing: -0.5px;
+    }
+
+    header .subtitle {
+      font-size: 0.9rem;
+      color: #bfdbfe;
+      margin-top: 4px;
+    }
+
+    .badge-unit {
+      background: rgba(255, 255, 255, 0.2);
+      border: 1px solid rgba(255, 255, 255, 0.3);
+      padding: 6px 14px;
+      border-radius: 9999px;
+      font-size: 0.82rem;
+      font-weight: 600;
+      letter-spacing: 0.5px;
+    }
+
+    /* Card container */
+    .card {
+      background: white;
+      border-radius: 14px;
+      padding: 22px;
+      box-shadow: var(--card-shadow);
+      border: 1px solid var(--slate-200);
+    }
+
+    .card-title {
+      font-size: 1.05rem;
+      font-weight: 700;
+      color: var(--slate-900);
+      margin-bottom: 14px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    /* Config Controls */
+    .input-grid {
+      display: grid;
+      grid-template-columns: 2fr 1.2fr 1fr auto;
+      gap: 14px;
+      align-items: end;
+    }
+
+    @media (max-width: 900px) {
+      .input-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    .form-group {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .form-group label {
+      font-size: 0.85rem;
+      font-weight: 600;
+      color: var(--slate-700);
+    }
+
+    input[type="text"], select {
+      padding: 10px 14px;
+      border-radius: 8px;
+      border: 1.5px solid var(--slate-200);
+      font-size: 0.95rem;
+      font-family: "Courier New", monospace;
+      font-weight: 600;
+      outline: none;
+      transition: border-color 0.2s;
+    }
+
+    input[type="text"]:focus, select:focus {
+      border-color: var(--primary);
+    }
+
+    .btn {
+      padding: 10px 18px;
+      border-radius: 8px;
+      border: none;
+      font-weight: 600;
+      font-size: 0.9rem;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      transition: all 0.2s ease;
+    }
+
+    .btn-primary {
+      background: var(--primary);
+      color: white;
+    }
+
+    .btn-primary:hover {
+      background: var(--primary-dark);
+    }
+
+    .btn-secondary {
+      background: var(--slate-100);
+      color: var(--slate-700);
+      border: 1px solid var(--slate-200);
+    }
+
+    .btn-secondary:hover:not(:disabled) {
+      background: var(--slate-200);
+    }
+
+    .btn:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+
+    /* Simulation Control Bar */
+    .controls-bar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 12px;
+      padding: 12px 18px;
+      background: var(--slate-50);
+      border-radius: 10px;
+      border: 1px solid var(--slate-200);
+    }
+
+    .step-buttons {
+      display: flex;
+      gap: 8px;
+    }
+
+    .speed-slider {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-size: 0.85rem;
+      color: var(--slate-600);
+      font-weight: 600;
+    }
+
+    /* Metrics Bar */
+    .metrics-bar {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+      gap: 14px;
+    }
+
+    .metric-card {
+      background: var(--slate-50);
+      border-radius: 10px;
+      padding: 14px;
+      border: 1px solid var(--slate-200);
+      text-align: center;
+    }
+
+    .metric-label {
+      font-size: 0.78rem;
+      font-weight: 600;
+      color: var(--slate-600);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .metric-value {
+      font-size: 1.5rem;
+      font-weight: 800;
+      color: var(--slate-900);
+      margin-top: 4px;
+    }
+
+    .metric-value.highlight-blue { color: var(--primary); }
+    .metric-value.highlight-green { color: var(--success); }
+    .metric-value.highlight-orange { color: var(--warning); }
+
+    /* Visual Alignment Matrix */
+    .visualizer-scroll {
+      overflow-x: auto;
+      padding-bottom: 12px;
+    }
+
+    .matrix-container {
+      display: inline-block;
+      min-width: 100%;
+      padding: 10px 4px;
+    }
+
+    .char-row {
+      display: flex;
+      margin-bottom: 8px;
+      align-items: center;
+    }
+
+    .row-label {
+      width: 80px;
+      min-width: 80px;
+      font-weight: 700;
+      font-size: 0.85rem;
+      color: var(--slate-600);
+      text-transform: uppercase;
+    }
+
+    .char-cell {
+      width: 42px;
+      height: 42px;
+      min-width: 42px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      border-radius: 8px;
+      border: 1.5px solid var(--slate-200);
+      background: white;
+      margin-right: 6px;
+      font-family: "Courier New", monospace;
+      font-weight: 700;
+      font-size: 1.15rem;
+      position: relative;
+      transition: all 0.25s ease;
+    }
+
+    .char-cell.empty {
+      border: 1.5px dashed #cbd5e1;
+      background: #f8fafc;
+      color: transparent;
+    }
+
+    .char-cell .index-tag {
+      font-size: 0.65rem;
+      font-family: var(--font-family);
+      color: var(--slate-500);
+      position: absolute;
+      top: 2px;
+      font-weight: 600;
+    }
+
+    .char-cell .val {
+      margin-top: 8px;
+    }
+
+    /* Comparison States */
+    .char-cell.matched {
+      background: var(--success-light);
+      border-color: var(--success);
+      color: #15803d;
+      box-shadow: 0 0 8px rgba(22, 163, 74, 0.4);
+    }
+
+    .char-cell.mismatched {
+      background: var(--danger-light);
+      border-color: var(--danger);
+      color: #b91c1c;
+      box-shadow: 0 0 8px rgba(220, 38, 38, 0.4);
+    }
+
+    .char-cell.active-scan {
+      border-color: #8b5cf6;
+      box-shadow: 0 0 0 3px rgba(139, 92, 246, 0.3);
+    }
+
+    /* Shift Decision Explanation Grid */
+    .decision-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1.2fr;
+      gap: 16px;
+    }
+
+    @media (max-width: 850px) {
+      .decision-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    .info-box {
+      background: var(--slate-50);
+      border: 1.5px solid var(--slate-200);
+      border-radius: 10px;
+      padding: 16px;
+    }
+
+    .info-box-title {
+      font-size: 0.85rem;
+      font-weight: 700;
+      color: var(--slate-700);
+      margin-bottom: 8px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .info-formula {
+      font-family: "Courier New", monospace;
+      background: white;
+      padding: 8px 12px;
+      border-radius: 6px;
+      border: 1px solid var(--slate-200);
+      font-size: 0.88rem;
+      color: var(--slate-800);
+      margin: 8px 0;
+    }
+
+    .highlight-badge {
+      display: inline-block;
+      padding: 3px 8px;
+      border-radius: 6px;
+      font-weight: 700;
+      font-size: 0.85rem;
+    }
+
+    .badge-winner {
+      background: #dbeafe;
+      color: #1d4ed8;
+      border: 1px solid #93c5fd;
+    }
+
+    /* Tables Grid */
+    .tables-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+    }
+
+    @media (max-width: 768px) {
+      .tables-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    table.data-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.88rem;
+      text-align: center;
+    }
+
+    table.data-table th, table.data-table td {
+      border: 1px solid var(--slate-200);
+      padding: 8px 10px;
+    }
+
+    table.data-table th {
+      background: var(--slate-100);
+      font-weight: 700;
+      color: var(--slate-700);
+    }
+
+    table.data-table td.code-cell {
+      font-family: "Courier New", monospace;
+      font-weight: 700;
+    }
+
+    /* Step Log */
+    .log-container {
+      max-height: 220px;
+      overflow-y: auto;
+      border: 1px solid var(--slate-200);
+      border-radius: 8px;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="container">
+    <!-- Header -->
+    <header>
+      <div>
+        <h1>Boyer–Moore String Matching Simulator</h1>
+        <div class="subtitle">Interactive Step-by-Step Execution, Heuristic Breakdown & Complexity Demonstration</div>
+      </div>
+      <div class="badge-unit">DAA CIA–3 Component–1 (Unit–4)</div>
+    </header>
+
+    <!-- Configuration Card -->
+    <div class="card">
+      <div class="card-title">
+        <span>⚙️</span> Simulation Parameters & Presets
+      </div>
+      <div class="input-grid">
+        <div class="form-group">
+          <label for="textInput">Target Text (T):</label>
+          <input type="text" id="textInput" value="GCAATGCAGAGAG" />
+        </div>
+        <div class="form-group">
+          <label for="patternInput">Search Pattern (P):</label>
+          <input type="text" id="patternInput" value="GCAGAGAG" />
+        </div>
+        <div class="form-group">
+          <label for="presetSelect">Educational Presets:</label>
+          <select id="presetSelect">
+            <option value="dna" selected>DNA Search (Classic Textbook)</option>
+            <option value="english">Natural English Search</option>
+            <option value="sublinear">Sublinear Best Case (O(n/m))</option>
+            <option value="overlapping">Overlapping Patterns</option>
+            <option value="repeated">Repetitive Worst-Case Setup</option>
+          </select>
+        </div>
+        <button class="btn btn-primary" id="btnApply">Reset / Apply</button>
+      </div>
+    </div>
+
+    <!-- Metrics Bar -->
+    <div class="metrics-bar">
+      <div class="metric-card">
+        <div class="metric-label">Current Step</div>
+        <div class="metric-value highlight-blue" id="metricCurrentStep">0 / 0</div>
+      </div>
+      <div class="metric-card">
+        <div class="metric-label">Boyer-Moore Comparisons</div>
+        <div class="metric-value highlight-green" id="metricBMComps">0</div>
+      </div>
+      <div class="metric-card">
+        <div class="metric-label">Naive Comparisons</div>
+        <div class="metric-value highlight-orange" id="metricNaiveComps">0</div>
+      </div>
+      <div class="metric-card">
+        <div class="metric-label">KMP Comparisons</div>
+        <div class="metric-value" id="metricKMPComps">0</div>
+      </div>
+      <div class="metric-card">
+        <div class="metric-label">Comparisons Saved vs Naive</div>
+        <div class="metric-value highlight-green" id="metricSaved">0%</div>
+      </div>
+    </div>
+
+    <!-- Visualizer Card -->
+    <div class="card">
+      <div class="card-title" style="justify-content: space-between;">
+        <div style="display: flex; align-items: center; gap: 8px;">
+          <span>🔍</span> Visual Pattern Alignment & Right-to-Left Scanning
+        </div>
+        <span id="stepStatusBadge" class="highlight-badge badge-winner">Ready</span>
+      </div>
+
+      <!-- Controls -->
+      <div class="controls-bar">
+        <div class="step-buttons">
+          <button class="btn btn-secondary" id="btnFirst" title="First Step">|&lt;</button>
+          <button class="btn btn-secondary" id="btnPrev" title="Previous Step">&lt; Prev</button>
+          <button class="btn btn-primary" id="btnPlayPause">▶ Play</button>
+          <button class="btn btn-secondary" id="btnNext" title="Next Step">Next &gt;</button>
+          <button class="btn btn-secondary" id="btnLast" title="Last Step">&gt;|</button>
+          <button class="btn btn-secondary" id="btnReset" title="Reset">↺ Reset</button>
+        </div>
+        <div class="speed-slider">
+          <label for="speedRange">Animation Speed:</label>
+          <input type="range" id="speedRange" min="300" max="2500" step="200" value="1200" />
+          <span id="speedDisplay">1.2s</span>
+        </div>
+      </div>
+
+      <!-- Alignment Matrix -->
+      <div class="visualizer-scroll" style="margin-top: 18px;">
+        <div class="matrix-container" id="matrixContainer">
+          <!-- Populated dynamically -->
+        </div>
+      </div>
+
+      <div style="margin-top: 10px; font-size: 0.85rem; color: var(--slate-600); display: flex; gap: 20px; flex-wrap: wrap;">
+        <div><span style="display:inline-block;width:12px;height:12px;background:var(--success-light);border:1px solid var(--success);border-radius:3px;margin-right:4px;"></span> Matched Character (P[j] == T[s+j])</div>
+        <div><span style="display:inline-block;width:12px;height:12px;background:var(--danger-light);border:1px solid var(--danger);border-radius:3px;margin-right:4px;"></span> Mismatched Character (P[j] != T[s+j])</div>
+        <div><span style="display:inline-block;width:12px;height:12px;border:1.5px dashed #cbd5e1;background:#f8fafc;border-radius:3px;margin-right:4px;"></span> Unaligned / Uncompared</div>
+      </div>
+    </div>
+
+    <!-- Heuristics Decision Breakdown -->
+    <div class="card">
+      <div class="card-title">
+        <span>⚡</span> Heuristic Calculations & Shift Decision for Current Step
+      </div>
+      <div class="decision-grid">
+        <div class="info-box">
+          <div class="info-box-title">1. Bad Character Heuristic</div>
+          <p style="font-size: 0.85rem; color: var(--slate-600);">Aligns the rightmost occurrence of mismatched text character with the pattern.</p>
+          <div class="info-formula" id="bcFormula">Shift_BC = max(1, j - L(c))</div>
+          <div id="bcResult" style="font-weight: 700; font-size: 0.95rem; color: var(--slate-800);">Shift Value: --</div>
+        </div>
+
+        <div class="info-box">
+          <div class="info-box-title">2. Good Suffix Heuristic</div>
+          <p style="font-size: 0.85rem; color: var(--slate-600);">Re-aligns the matched suffix with its other occurrences or longest matching prefix.</p>
+          <div class="info-formula" id="gsFormula">Shift_GS = Good_Suffix_Table[j + 1]</div>
+          <div id="gsResult" style="font-weight: 700; font-size: 0.95rem; color: var(--slate-800);">Shift Value: --</div>
+        </div>
+
+        <div class="info-box" style="background: #eff6ff; border-color: #bfdbfe;">
+          <div class="info-box-title" style="color: #1e40af;">Boyer–Moore Maximum Shift Rule</div>
+          <p style="font-size: 0.85rem; color: #1e3a8a;">Shift = max(Shift_BC, Shift_GS)</p>
+          <div class="info-formula" id="bmDecisionFormula" style="font-weight: 700; color: #1e3a8a;">Selected Shift: --</div>
+          <div id="bmDecisionText" style="font-weight: 600; font-size: 0.9rem; color: #1e40af; margin-top: 4px;">Rule Chosen: --</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Tables & Step Log Grid -->
+    <div class="tables-grid">
+      <!-- Precomputed Tables -->
+      <div class="card">
+        <div class="card-title">
+          <span>📊</span> Preprocessed Lookup Tables
+        </div>
+        <div style="margin-bottom: 14px;">
+          <h4 style="font-size: 0.85rem; color: var(--slate-700); margin-bottom: 6px;">Bad Character Table (Last Occurrence L(c)):</h4>
+          <div style="max-height: 120px; overflow-y: auto;">
+            <table class="data-table" id="badCharTableElem">
+              <thead><tr><th>Char (c)</th><th>Last Index L(c)</th></tr></thead>
+              <tbody></tbody>
+            </table>
+          </div>
+        </div>
+
+        <div>
+          <h4 style="font-size: 0.85rem; color: var(--slate-700); margin-bottom: 6px;">Good Suffix Shift Table:</h4>
+          <div style="max-height: 140px; overflow-y: auto;">
+            <table class="data-table" id="goodSuffixTableElem">
+              <thead><tr><th>Mismatch Index j</th><th>Shift Amount</th></tr></thead>
+              <tbody></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- Execution Log -->
+      <div class="card">
+        <div class="card-title">
+          <span>📝</span> Execution Step History
+        </div>
+        <div class="log-container">
+          <table class="data-table" id="historyTableElem">
+            <thead>
+              <tr>
+                <th>Step</th>
+                <th>Shift (s)</th>
+                <th>Status</th>
+                <th>BC Shift</th>
+                <th>GS Shift</th>
+                <th>Applied</th>
+              </tr>
+            </thead>
+            <tbody></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <script>
+    // =========================================================
+    // Core Boyer-Moore Algorithm (JavaScript Client-Side Engine)
+    // =========================================================
+    function buildBadCharTable(pattern) {
+      const table = {};
+      for (let i = 0; i < pattern.length; i++) {
+        table[pattern[i]] = i;
+      }
+      return table;
+    }
+
+    function buildGoodSuffixTable(pattern) {
+      const m = pattern.length;
+      const shift = new Array(m + 1).fill(0);
+      const bpos = new Array(m + 1).fill(0);
+
+      let i = m;
+      let j = m + 1;
+      bpos[i] = j;
+
+      while (i > 0) {
+        while (j <= m && pattern[i - 1] !== pattern[j - 1]) {
+          if (shift[j] === 0) {
+            shift[j] = j - i;
+          }
+          j = bpos[j];
+        }
+        i--;
+        j--;
+        bpos[i] = j;
+      }
+
+      j = bpos[0];
+      for (let k = 0; k <= m; k++) {
+        if (shift[k] === 0) {
+          shift[k] = j;
+        }
+        if (k === j) {
+          j = bpos[j];
+        }
+      }
+      return shift;
+    }
+
+    function runBoyerMooreSimulation(text, pattern) {
+      const m = pattern.length;
+      const n = text.length;
+      const bcTable = buildBadCharTable(pattern);
+      const gsTable = buildGoodSuffixTable(pattern);
+
+      const steps = [];
+      const matches = [];
+      let comparisons = 0;
+      let shifts = 0;
+      let s = 0;
+      let stepNum = 1;
+
+      while (s <= n - m) {
+        let j = m - 1;
+        const matchedChars = [];
+        let mismatchInfo = null;
+
+        while (j >= 0) {
+          comparisons++;
+          const tIdx = s + j;
+          if (pattern[j] === text[tIdx]) {
+            matchedChars.push({ pIdx: j, tIdx: tIdx, char: pattern[j] });
+            j--;
+          } else {
+            mismatchInfo = {
+              pIdx: j,
+              tIdx: tIdx,
+              pChar: pattern[j],
+              tChar: text[tIdx]
+            };
+            break;
+          }
+        }
+
+        const isMatch = (j < 0);
+        let bcShift = 0;
+        let gsShift = 0;
+        let chosenShift = 0;
+        let ruleUsed = "";
+
+        if (isMatch) {
+          matches.push(s);
+          gsShift = gsTable[0] > 0 ? gsTable[0] : 1;
+          bcShift = 1;
+          chosenShift = gsShift;
+          ruleUsed = "Good Suffix Rule (Full Match Shift)";
+        } else {
+          const tChar = mismatchInfo.tChar;
+          const lastOcc = bcTable[tChar] !== undefined ? bcTable[tChar] : -1;
+          bcShift = Math.max(1, j - lastOcc);
+          gsShift = gsTable[j + 1];
+
+          if (bcShift >= gsShift) {
+            chosenShift = bcShift;
+            ruleUsed = "Bad Character Heuristic";
+          } else {
+            chosenShift = gsShift;
+            ruleUsed = "Good Suffix Heuristic";
+          }
+        }
+
+        steps.push({
+          stepNum: stepNum,
+          shiftIndex: s,
+          matchedChars: matchedChars,
+          mismatchInfo: mismatchInfo,
+          isMatch: isMatch,
+          bcShift: bcShift,
+          gsShift: gsShift,
+          chosenShift: chosenShift,
+          ruleUsed: ruleUsed,
+          comparisonsSoFar: comparisons
+        });
+
+        s += chosenShift;
+        shifts++;
+        stepNum++;
+      }
+
+      return {
+        text,
+        pattern,
+        matches,
+        totalComparisons: comparisons,
+        totalShifts: shifts,
+        steps,
+        bcTable,
+        gsTable
+      };
+    }
+
+    function runNaiveBaseline(text, pattern) {
+      const n = text.length;
+      const m = pattern.length;
+      let comps = 0;
+      for (let s = 0; s <= n - m; s++) {
+        for (let j = 0; j < m; j++) {
+          comps++;
+          if (pattern[j] !== text[s + j]) break;
+        }
+      }
+      return comps;
+    }
+
+    function runKMPBaseline(text, pattern) {
+      const n = text.length;
+      const m = pattern.length;
+      let comps = 0;
+      const lps = new Array(m).fill(0);
+      let len = 0, i = 1;
+      while (i < m) {
+        if (pattern[i] === pattern[len]) {
+          len++;
+          lps[i] = len;
+          i++;
+        } else {
+          if (len !== 0) len = lps[len - 1];
+          else { lps[i] = 0; i++; }
+        }
+      }
+
+      let ti = 0, pi = 0;
+      while (ti < n) {
+        comps++;
+        if (pattern[pi] === text[ti]) {
+          ti++;
+          pi++;
+        }
+        if (pi === m) {
+          pi = lps[pi - 1];
+        } else if (ti < n && pattern[pi] !== text[ti]) {
+          if (pi !== 0) pi = lps[pi - 1];
+          else ti++;
+        }
+      }
+      return comps;
+    }
+
+    // =========================================================
+    // UI Controller & Animation
+    // =========================================================
+    let currentSimData = null;
+    let currentStepIndex = 0;
+    let playInterval = null;
+
+    const presets = {
+      dna: { text: "GCAATGCAGAGAG", pattern: "GCAGAGAG" },
+      english: { text: "HERE IS A SIMPLE EXAMPLE", pattern: "EXAMPLE" },
+      sublinear: { text: "ABCDEFGHIJKLMNO", pattern: "XYZW" },
+      overlapping: { text: "ABRACADABRA", pattern: "ABRA" },
+      repeated: { text: "AAAAAAAAAAAAAAAAAAAA", pattern: "AAAA" }
+    };
+
+    function initSimulation() {
+      const text = document.getElementById("textInput").value.trim();
+      const pattern = document.getElementById("patternInput").value.trim();
+
+      if (!text || !pattern || pattern.length > text.length) {
+        alert("Please ensure text and pattern are non-empty and pattern length does not exceed text length.");
+        return;
+      }
+
+      currentSimData = runBoyerMooreSimulation(text, pattern);
+      const naiveComps = runNaiveBaseline(text, pattern);
+      const kmpComps = runKMPBaseline(text, pattern);
+
+      document.getElementById("metricNaiveComps").textContent = naiveComps;
+      document.getElementById("metricKMPComps").textContent = kmpComps;
+      const savedPct = naiveComps > 0 ? (((naiveComps - currentSimData.totalComparisons) / naiveComps) * 100).toFixed(1) + "%" : "0%";
+      document.getElementById("metricSaved").textContent = savedPct;
+
+      renderTables();
+      renderHistoryTable();
+
+      currentStepIndex = 0;
+      renderCurrentStep();
+      pauseAutoPlay();
+    }
+
+    function renderTables() {
+      // Bad char table
+      const bcBody = document.querySelector("#badCharTableElem tbody");
+      bcBody.innerHTML = "";
+      for (const [char, idx] of Object.entries(currentSimData.bcTable)) {
+        const tr = document.createElement("tr");
+        tr.innerHTML = `<td class="code-cell">'${char}'</td><td class="code-cell">${idx}</td>`;
+        bcBody.appendChild(tr);
+      }
+
+      // Good suffix table
+      const gsBody = document.querySelector("#goodSuffixTableElem tbody");
+      gsBody.innerHTML = "";
+      currentSimData.gsTable.forEach((val, idx) => {
+        const tr = document.createElement("tr");
+        const label = idx === 0 ? "Full Match (s)" : `Mismatch at j=${idx - 1}`;
+        tr.innerHTML = `<td>${label}</td><td class="code-cell">${val}</td>`;
+        gsBody.appendChild(tr);
+      });
+    }
+
+    function renderHistoryTable() {
+      const histBody = document.querySelector("#historyTableElem tbody");
+      histBody.innerHTML = "";
+      currentSimData.steps.forEach((step, idx) => {
+        const tr = document.createElement("tr");
+        tr.id = `hist-row-${idx}`;
+        tr.style.cursor = "pointer";
+        tr.onclick = () => { goToStep(idx); };
+        const statusText = step.isMatch ? "<span style='color:var(--success);font-weight:700;'>MATCH</span>" : "<span style='color:var(--danger);font-weight:700;'>MISMATCH</span>";
+        tr.innerHTML = `
+          <td>${step.stepNum}</td>
+          <td class="code-cell">${step.shiftIndex}</td>
+          <td>${statusText}</td>
+          <td class="code-cell">${step.bcShift}</td>
+          <td class="code-cell">${step.gsShift}</td>
+          <td class="code-cell" style="font-weight:800;color:var(--primary);">${step.chosenShift}</td>
+        `;
+        histBody.appendChild(tr);
+      });
+    }
+
+    function renderCurrentStep() {
+      if (!currentSimData || currentSimData.steps.length === 0) return;
+
+      const step = currentSimData.steps[currentStepIndex];
+      const text = currentSimData.text;
+      const pattern = currentSimData.pattern;
+      const n = text.length;
+      const m = pattern.length;
+      const s = step.shiftIndex;
+
+      // Update Top Metrics
+      document.getElementById("metricCurrentStep").textContent = `${currentStepIndex + 1} / ${currentSimData.steps.length}`;
+      document.getElementById("metricBMComps").textContent = step.comparisonsSoFar;
+
+      // Update Status Badge
+      const badge = document.getElementById("stepStatusBadge");
+      if (step.isMatch) {
+        badge.textContent = `Match Found at index ${s}!`;
+        badge.className = "highlight-badge";
+        badge.style.background = "var(--success-light)";
+        badge.style.color = "#15803d";
+      } else {
+        badge.textContent = `Mismatch at Pattern index j=${step.mismatchInfo.pIdx}`;
+        badge.className = "highlight-badge";
+        badge.style.background = "var(--warning-light)";
+        badge.style.color = "#b45309";
+      }
+
+      // Render Matrix
+      const container = document.getElementById("matrixContainer");
+      container.innerHTML = "";
+
+      // 1. Text Row
+      const textRow = document.createElement("div");
+      textRow.className = "char-row";
+      textRow.innerHTML = `<div class="row-label">Text (T)</div>`;
+      for (let i = 0; i < n; i++) {
+        const cell = document.createElement("div");
+        cell.className = "char-cell";
+
+        // Check if matched or mismatched in this step
+        let isMatched = step.matchedChars.some(mc => mc.tIdx === i);
+        let isMismatched = step.mismatchInfo && step.mismatchInfo.tIdx === i;
+
+        if (isMatched) cell.classList.add("matched");
+        else if (isMismatched) cell.classList.add("mismatched");
+
+        cell.innerHTML = `<span class="index-tag">${i}</span><span class="val">${text[i]}</span>`;
+        textRow.appendChild(cell);
+      }
+      container.appendChild(textRow);
+
+      // 2. Pattern Row aligned at s
+      const pattRow = document.createElement("div");
+      pattRow.className = "char-row";
+      pattRow.innerHTML = `<div class="row-label">Pattern (P)</div>`;
+      for (let i = 0; i < n; i++) {
+        const cell = document.createElement("div");
+        if (i >= s && i < s + m) {
+          const pIdx = i - s;
+          cell.className = "char-cell";
+
+          let isMatched = step.matchedChars.some(mc => mc.pIdx === pIdx);
+          let isMismatched = step.mismatchInfo && step.mismatchInfo.pIdx === pIdx;
+
+          if (isMatched) cell.classList.add("matched");
+          else if (isMismatched) cell.classList.add("mismatched");
+
+          cell.innerHTML = `<span class="index-tag">${pIdx}</span><span class="val">${pattern[pIdx]}</span>`;
+        } else {
+          cell.className = "char-cell empty";
+        }
+        pattRow.appendChild(cell);
+      }
+      container.appendChild(pattRow);
+
+      // Update Heuristics Panel
+      if (step.isMatch) {
+        document.getElementById("bcFormula").textContent = "Full pattern matched.";
+        document.getElementById("bcResult").textContent = "Shift_BC = 1";
+        document.getElementById("gsFormula").textContent = `Good Suffix Full Shift = table[0] = ${step.gsShift}`;
+        document.getElementById("gsResult").textContent = `Shift_GS = ${step.gsShift}`;
+        document.getElementById("bmDecisionFormula").textContent = `Selected Shift: ${step.chosenShift}`;
+        document.getElementById("bmDecisionText").textContent = `Rule: ${step.ruleUsed}`;
+      } else {
+        const mm = step.mismatchInfo;
+        const lastOcc = currentSimData.bcTable[mm.tChar] !== undefined ? currentSimData.bcTable[mm.tChar] : -1;
+        document.getElementById("bcFormula").textContent = `Shift_BC = max(1, ${mm.pIdx} - L('${mm.tChar}')) = max(1, ${mm.pIdx} - (${lastOcc})) = ${step.bcShift}`;
+        document.getElementById("bcResult").textContent = `Shift_BC Value = ${step.bcShift}`;
+
+        document.getElementById("gsFormula").textContent = `Shift_GS = Good_Suffix_Table[${mm.pIdx + 1}] = ${step.gsShift}`;
+        document.getElementById("gsResult").textContent = `Shift_GS Value = ${step.gsShift}`;
+
+        document.getElementById("bmDecisionFormula").textContent = `Shift = max(${step.bcShift}, ${step.gsShift}) = ${step.chosenShift}`;
+        document.getElementById("bmDecisionText").textContent = `Rule Applied: ${step.ruleUsed}`;
+      }
+
+      // Highlight active history row
+      document.querySelectorAll("#historyTableElem tbody tr").forEach((tr, idx) => {
+        if (idx === currentStepIndex) {
+          tr.style.background = "#eff6ff";
+          tr.style.fontWeight = "bold";
+        } else {
+          tr.style.background = "";
+          tr.style.fontWeight = "normal";
+        }
+      });
+
+      // Update button states
+      document.getElementById("btnFirst").disabled = (currentStepIndex === 0);
+      document.getElementById("btnPrev").disabled = (currentStepIndex === 0);
+      document.getElementById("btnNext").disabled = (currentStepIndex >= currentSimData.steps.length - 1);
+      document.getElementById("btnLast").disabled = (currentStepIndex >= currentSimData.steps.length - 1);
+    }
+
+    function goToStep(idx) {
+      if (idx >= 0 && idx < currentSimData.steps.length) {
+        currentStepIndex = idx;
+        renderCurrentStep();
+      }
+    }
+
+    function toggleAutoPlay() {
+      if (playInterval) {
+        pauseAutoPlay();
+      } else {
+        startAutoPlay();
+      }
+    }
+
+    function startAutoPlay() {
+      const speed = parseInt(document.getElementById("speedRange").value);
+      document.getElementById("btnPlayPause").textContent = "❚❚ Pause";
+      document.getElementById("btnPlayPause").classList.replace("btn-primary", "btn-secondary");
+
+      playInterval = setInterval(() => {
+        if (currentStepIndex < currentSimData.steps.length - 1) {
+          currentStepIndex++;
+          renderCurrentStep();
+        } else {
+          pauseAutoPlay();
+        }
+      }, speed);
+    }
+
+    function pauseAutoPlay() {
+      if (playInterval) {
+        clearInterval(playInterval);
+        playInterval = null;
+      }
+      document.getElementById("btnPlayPause").textContent = "▶ Play";
+      document.getElementById("btnPlayPause").classList.replace("btn-secondary", "btn-primary");
+    }
+
+    // Event Listeners
+    document.getElementById("presetSelect").addEventListener("change", (e) => {
+      const selected = presets[e.target.value];
+      if (selected) {
+        document.getElementById("textInput").value = selected.text;
+        document.getElementById("patternInput").value = selected.pattern;
+        initSimulation();
+      }
+    });
+
+    document.getElementById("btnApply").addEventListener("click", initSimulation);
+    document.getElementById("btnReset").addEventListener("click", initSimulation);
+
+    document.getElementById("btnFirst").addEventListener("click", () => { pauseAutoPlay(); goToStep(0); });
+    document.getElementById("btnPrev").addEventListener("click", () => { pauseAutoPlay(); goToStep(currentStepIndex - 1); });
+    document.getElementById("btnNext").addEventListener("click", () => { pauseAutoPlay(); goToStep(currentStepIndex + 1); });
+    document.getElementById("btnLast").addEventListener("click", () => { pauseAutoPlay(); goToStep(currentSimData.steps.length - 1); });
+    document.getElementById("btnPlayPause").addEventListener("click", toggleAutoPlay);
+
+    document.getElementById("speedRange").addEventListener("input", (e) => {
+      const sec = (e.target.value / 1000).toFixed(1);
+      document.getElementById("speedDisplay").textContent = `${sec}s`;
+      if (playInterval) {
+        pauseAutoPlay();
+        startAutoPlay();
+      }
+    });
+
+    // Initialize on load
+    window.addEventListener("DOMContentLoaded", initSimulation);
+  </script>
+</body>
+</html>
